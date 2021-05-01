@@ -296,14 +296,11 @@ class Canvas(QWidget):
         if self.current and self.current.reach_max_points() is False:
             print('draw finish')
             init_pos = self.current[0]
-            min_x = init_pos.x()
-            min_y = init_pos.y()
             target_pos = self.line[1]
-            max_x = target_pos.x()
-            max_y = target_pos.y()
-            self.current.add_point(QPointF(max_x, min_y))
+            p1, p2 = self.calc_extra_points(-1/(self.calc_shib(init_pos, target_pos)), init_pos, max_d=self.calc_distance(init_pos, target_pos) / 2)
+            self.current.add_point(p1)
             self.current.add_point(target_pos)
-            self.current.add_point(QPointF(min_x, max_y))
+            self.current.add_point(p2)
             self.finalise()
         elif not self.out_of_pixmap(pos):
             print('click start', self.current)
@@ -588,7 +585,6 @@ class Canvas(QWidget):
             self.drawingPolygon.emit(False)
             self.update()
             return
-
         self.current.close()
         self.shapes.append(self.current)
         self.current = None
@@ -665,6 +661,7 @@ class Canvas(QWidget):
             self.selected_shape.points[0] += QPointF(1.0, 0)
             self.selected_shape.points[1] += QPointF(1.0, 0)
             self.selected_shape.points[2] += QPointF(1.0, 0)
+            self.selected_shape.points[3] += QPointF(1.0, 0)
             self.selected_shape.points[3] += QPointF(1.0, 0)
         elif direction == 'Up' and not self.move_out_of_bound(QPointF(0, -1.0)):
             # print("move Up one pixel")
