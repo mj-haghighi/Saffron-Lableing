@@ -476,7 +476,7 @@ class Canvas(QWidget):
         p.drawRect(left_top.x(), left_top.y(), rect_width, rect_height)
     
     def calc_shib(self, p1: QPointF, p2: QPointF) -> float:
-        sorat =  (p1.y() - p2.y())
+        sorat =  (p1.y() - p2.y() + 1) if p1.y() - p2.y() > 0 else p1.y() - p2.y() - 1 
         makhraj = ((p1.x() - p2.x()) + 1) if p1.x() - p2.x() > 0 else ((p1.x() - p2.x()) - 1) 
         m =  sorat / makhraj 
         return m
@@ -505,7 +505,7 @@ class Canvas(QWidget):
         p.setBrush(brush)
         p.setPen(self.drawing_rect_color)
         
-        p1, p2 = self.calc_extra_points(-1*self.calc_shib(left_top, right_bottom), left_top)
+        p1, p2 = self.calc_extra_points(-1/(self.calc_shib(left_top, right_bottom)), left_top)
         points = QPolygonF([
             p1,
             left_top,
