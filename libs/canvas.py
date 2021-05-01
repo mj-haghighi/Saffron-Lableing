@@ -123,7 +123,7 @@ class Canvas(QWidget):
                 current_width = abs(self.current[0].x() - pos.x())
                 current_height = abs(self.current[0].y() - pos.y())
                 self.parent().window().label_coordinates.setText(
-                        'Width: %d, Height: %d / X: %d; Y: %d' % (current_width, current_height, pos.x(), pos.y()))
+                    'Width: %d, Height: %d / X: %d; Y: %d' % (current_width, current_height, pos.x(), pos.y()))
 
                 color = self.drawing_line_color
                 if self.out_of_pixmap(pos):
@@ -149,7 +149,8 @@ class Canvas(QWidget):
                     min_size = min(abs(pos.x() - min_x), abs(pos.y() - min_y))
                     direction_x = -1 if pos.x() - min_x < 0 else 1
                     direction_y = -1 if pos.y() - min_y < 0 else 1
-                    self.line[1] = QPointF(min_x + direction_x * min_size, min_y + direction_y * min_size)
+                    self.line[1] = QPointF(
+                        min_x + direction_x * min_size, min_y + direction_y * min_size)
                 else:
                     self.line[1] = pos
 
@@ -294,16 +295,15 @@ class Canvas(QWidget):
 
     def handle_drawing(self, pos):
         if self.current and self.current.reach_max_points() is False:
-            print('draw finish')
             init_pos = self.current[0]
             target_pos = self.line[1]
-            p1, p2 = calc_extra_points(-1/(calc_shib(init_pos, target_pos)), init_pos, max_d=calc_distance(init_pos, target_pos) / 2)
+            p1, p2 = calc_extra_points(-1/(calc_shib(init_pos, target_pos)),
+                                       init_pos, max_d=calc_distance(init_pos, target_pos) / 2)
             self.current.add_point(p1)
             self.current.add_point(target_pos)
             self.current.add_point(p2)
             self.finalise()
         elif not self.out_of_pixmap(pos):
-            print('click start', self.current)
             self.current = Shape()
             self.current.add_point(pos)
             self.line.points = [pos, pos]
@@ -382,7 +382,8 @@ class Canvas(QWidget):
             opposite_point_index = (index + 2) % 4
             opposite_point = shape[opposite_point_index]
 
-            min_size = min(abs(pos.x() - opposite_point.x()), abs(pos.y() - opposite_point.y()))
+            min_size = min(abs(pos.x() - opposite_point.x()),
+                           abs(pos.y() - opposite_point.y()))
             direction_x = -1 if pos.x() - opposite_point.x() < 0 else 1
             direction_y = -1 if pos.y() - opposite_point.y() < 0 else 1
             shift_pos = QPointF(opposite_point.x() + direction_x * min_size - point.x(),
@@ -471,15 +472,15 @@ class Canvas(QWidget):
         brush = QBrush(Qt.BDiagPattern)
         p.setBrush(brush)
         p.drawRect(left_top.x(), left_top.y(), rect_width, rect_height)
-    
 
     def paint_traingle(self, left_top, right_bottom):
         p = self._painter
         brush = QBrush(Qt.BDiagPattern)
         p.setBrush(brush)
         p.setPen(self.drawing_rect_color)
-        
-        p1, p2 = calc_extra_points(-1/(calc_shib(left_top, right_bottom)), left_top, max_d=calc_distance(left_top, right_bottom) / 2)
+
+        p1, p2 = calc_extra_points(-1/(calc_shib(left_top, right_bottom)),
+                                   left_top, max_d=calc_distance(left_top, right_bottom) / 2)
         points = QPolygonF([
             p1,
             left_top,
@@ -520,11 +521,12 @@ class Canvas(QWidget):
             right_bottom = self.line[1]
             self.paint_traingle(left_top, right_bottom)
 
-
         if self.drawing() and not self.prev_point.isNull() and not self.out_of_pixmap(self.prev_point):
             p.setPen(QColor(0, 0, 0))
-            p.drawLine(self.prev_point.x(), 0, self.prev_point.x(), self.pixmap.height())
-            p.drawLine(0, self.prev_point.y(), self.pixmap.width(), self.prev_point.y())
+            p.drawLine(self.prev_point.x(), 0,
+                       self.prev_point.x(), self.pixmap.height())
+            p.drawLine(0, self.prev_point.y(),
+                       self.pixmap.width(), self.prev_point.y())
 
         self.setAutoFillBackground(True)
         if self.verified:
@@ -656,7 +658,8 @@ class Canvas(QWidget):
         self.repaint()
 
     def move_out_of_bound(self, step):
-        points = [p1 + p2 for p1, p2 in zip(self.selected_shape.points, [step] * 4)]
+        points = [p1 + p2 for p1,
+                  p2 in zip(self.selected_shape.points, [step] * 4)]
         return True in map(self.out_of_pixmap, points)
 
     def set_last_label(self, text, line_color=None, fill_color=None):

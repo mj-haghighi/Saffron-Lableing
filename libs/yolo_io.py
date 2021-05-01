@@ -7,9 +7,12 @@ from xml.etree.ElementTree import Element, SubElement
 from lxml import etree
 import codecs
 from libs.constants import DEFAULT_ENCODING
+from libs.utils import calc_distance, calc_extra_points, calc_shib
+from PyQt5.QtCore import QPointF
 
 TXT_EXT = '.txt'
 ENCODE_METHOD = DEFAULT_ENCODING
+
 
 class YOLOWriter:
 
@@ -22,32 +25,19 @@ class YOLOWriter:
         self.local_img_path = local_img_path
         self.verified = False
 
-    def add_bnd_box(self, x_min, y_min, x_max, y_max, name, difficult):
-        bnd_box = {'xmin': x_min, 'ymin': y_min, 'xmax': x_max, 'ymax': y_max}
+    def add_bnd_box(self, points, name, difficult):
+        bnd_box = {}
+        bnd_box['points'] = points
         bnd_box['name'] = name
         bnd_box['difficult'] = difficult
         self.box_list.append(bnd_box)
 
     def bnd_box_to_yolo_line(self, box, class_list=[]):
-        x_min = box['xmin']
-        x_max = box['xmax']
-        y_min = box['ymin']
-        y_max = box['ymax']
-
-        x_center = float((x_min + x_max)) / 2 / self.img_size[1]
-        y_center = float((y_min + y_max)) / 2 / self.img_size[0]
-
-        w = float((x_max - x_min)) / self.img_size[1]
-        h = float((y_max - y_min)) / self.img_size[0]
-
         # PR387
         box_name = box['name']
         if box_name not in class_list:
             class_list.append(box_name)
-
-        class_index = class_list.index(box_name)
-
-        return class_index, x_center, y_center, w, h
+        return box['points'][0][0], box['points'][0][1], box['points'][1][0], box['points'][1][1], box_name
 
     def save(self, class_list=[], target_file=None):
 
@@ -56,20 +46,23 @@ class YOLOWriter:
 
         if target_file is None:
             out_file = open(
-            self.filename + TXT_EXT, 'w', encoding=ENCODE_METHOD)
-            classes_file = os.path.join(os.path.dirname(os.path.abspath(self.filename)), "classes.txt")
+                self.filename + TXT_EXT, 'w', encoding=ENCODE_METHOD)
+            classes_file = os.path.join(os.path.dirname(
+                os.path.abspath(self.filename)), "classes.txt")
             out_class_file = open(classes_file, 'w')
 
         else:
             out_file = codecs.open(target_file, 'w', encoding=ENCODE_METHOD)
-            classes_file = os.path.join(os.path.dirname(os.path.abspath(target_file)), "classes.txt")
+            classes_file = os.path.join(os.path.dirname(
+                os.path.abspath(target_file)), "classes.txt")
             out_class_file = open(classes_file, 'w')
 
-
         for box in self.box_list:
-            class_index, x_center, y_center, w, h = self.bnd_box_to_yolo_line(box, class_list)
+            x_center, y_center, x_edge, y_edge, class_name = self.bnd_box_to_yolo_line(
+                box, class_list)
             # print (classIndex, x_center, y_center, w, h)
-            out_file.write("%d %.6f %.6f %.6f %.6f\n" % (class_index, x_center, y_center, w, h))
+            out_file.write("%.6f, %.6f, %.6f, %.6f, %s\n" %
+                           (x_center, y_center, x_edge, y_edge, class_name))
 
         # print (classList)
         # print (out_class_file)
@@ -78,7 +71,6 @@ class YOLOWriter:
 
         out_class_file.close()
         out_file.close()
-
 
 
 class YoloReader:
@@ -116,31 +108,21 @@ class YoloReader:
     def get_shapes(self):
         return self.shapes
 
-    def add_shape(self, label, x_min, y_min, x_max, y_max, difficult):
+    def add_shape(self, x_center, y_center, x_edge, y_edge, label, difficult):
+        init_pos, target_pos = QPointF(
+            x_center, y_center), QPointF(x_edge, y_edge)
+        p1, p2 = calc_extra_points(-1/(calc_shib(init_pos, target_pos)),
+                                   init_pos, max_d=calc_distance(init_pos, target_pos) / 2)
 
-        points = [(x_min, y_min), (x_max, y_min), (x_max, y_max), (x_min, y_max)]
+        points = [(x_center, y_center), (p1.x(), p1.y()),
+                  (x_edge, y_edge), (p2.x(), p2.y())]
         self.shapes.append((label, points, None, None, difficult))
-
-    def yolo_line_to_shape(self, class_index, x_center, y_center, w, h):
-        label = self.classes[int(class_index)]
-
-        x_min = max(float(x_center) - float(w) / 2, 0)
-        x_max = min(float(x_center) + float(w) / 2, 1)
-        y_min = max(float(y_center) - float(h) / 2, 0)
-        y_max = min(float(y_center) + float(h) / 2, 1)
-
-        x_min = round(self.img_size[1] * x_min)
-        x_max = round(self.img_size[1] * x_max)
-        y_min = round(self.img_size[0] * y_min)
-        y_max = round(self.img_size[0] * y_max)
-
-        return label, x_min, y_min, x_max, y_max
 
     def parse_yolo_format(self):
         bnd_box_file = open(self.file_path, 'r')
         for bndBox in bnd_box_file:
-            class_index, x_center, y_center, w, h = bndBox.strip().split(' ')
-            label, x_min, y_min, x_max, y_max = self.yolo_line_to_shape(class_index, x_center, y_center, w, h)
+            x_center, y_center, x_edge, y_edge, class_name = bndBox.strip().split(',')
 
             # Caveat: difficult flag is discarded when saved as yolo format.
-            self.add_shape(label, x_min, y_min, x_max, y_max, False)
+            self.add_shape(float(x_center), float(y_center), float(x_edge),
+                           float(y_edge), class_name, False)

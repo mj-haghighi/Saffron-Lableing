@@ -51,7 +51,6 @@ class LabelFile(object):
         writer.verified = self.verified
         writer.write()
 
-
     def save_pascal_voc_format(self, filename, shapes, image_path, image_data,
                                line_color=None, fill_color=None, database_src=None):
         img_folder_path = os.path.dirname(image_path)
@@ -77,7 +76,8 @@ class LabelFile(object):
             # Add Chris
             difficult = int(shape['difficult'])
             bnd_box = LabelFile.convert_points_to_bnd_box(points)
-            writer.add_bnd_box(bnd_box[0], bnd_box[1], bnd_box[2], bnd_box[3], label, difficult)
+            writer.add_bnd_box(bnd_box[0], bnd_box[1],
+                               bnd_box[2], bnd_box[3], label, difficult)
 
         writer.save(target_file=filename)
         return
@@ -106,8 +106,8 @@ class LabelFile(object):
             label = shape['label']
             # Add Chris
             difficult = int(shape['difficult'])
-            bnd_box = LabelFile.convert_points_to_bnd_box(points)
-            writer.add_bnd_box(bnd_box[0], bnd_box[1], bnd_box[2], bnd_box[3], label, difficult)
+            points = [points[0], points[2]]
+            writer.add_bnd_box(points, label, difficult)
 
         writer.save(target_file=filename, class_list=class_list)
         return
