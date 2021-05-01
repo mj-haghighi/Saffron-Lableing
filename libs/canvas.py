@@ -8,7 +8,7 @@ except ImportError:
     from PyQt4.QtCore import *
 
 # from PyQt4.QtOpenGL import *
-
+import math
 from libs.shape import Shape
 from libs.utils import distance
 
@@ -294,6 +294,7 @@ class Canvas(QWidget):
 
     def handle_drawing(self, pos):
         if self.current and self.current.reach_max_points() is False:
+            print('draw finish')
             init_pos = self.current[0]
             min_x = init_pos.x()
             min_y = init_pos.y()
@@ -305,6 +306,7 @@ class Canvas(QWidget):
             self.current.add_point(QPointF(min_x, max_y))
             self.finalise()
         elif not self.out_of_pixmap(pos):
+            print('click start', self.current)
             self.current = Shape()
             self.current.add_point(pos)
             self.line.points = [pos, pos]
@@ -464,6 +466,54 @@ class Canvas(QWidget):
         if not self.bounded_move_shape(shape, point - offset):
             self.bounded_move_shape(shape, point + offset)
 
+    def paint_rect(self, left_top, right_bottom):
+        p = self._painter
+        rect_width = right_bottom.x() - left_top.x()
+        rect_height = right_bottom.y() - left_top.y()
+        p.setPen(self.drawing_rect_color)
+        brush = QBrush(Qt.BDiagPattern)
+        p.setBrush(brush)
+        p.drawRect(left_top.x(), left_top.y(), rect_width, rect_height)
+    
+    def calc_shib(self, p1: QPointF, p2: QPointF) -> float:
+        sorat =  (p1.y() - p2.y())
+        makhraj = ((p1.x() - p2.x()) + 1) if p1.x() - p2.x() > 0 else ((p1.x() - p2.x()) - 1) 
+        m =  sorat / makhraj 
+        return m
+
+    def calc_distance(self, p1: QPointF, p2: QPointF):
+        return math.sqrt(((p1.x() - p2.x()) ** 2) + ((p1.y() - p2.y()) ** 2))
+    
+    def calc_extra_points(self, m, p: QPointF, max_d = 40):
+        factor = max_d / 2
+        while True:
+            x = p.x() + factor
+            y = (m * x) + (p.y() - m*p.x())
+            
+            if self.calc_distance(p, QPointF(x,y)) > max_d:
+                factor = factor / 2
+            elif self.calc_distance(p, QPointF(x,y)) < (max_d / 1.5):
+                factor = factor * 1.5
+            else:
+                x1 = p.x() - factor
+                y1 = (m * x1) + (p.y() - m*p.x())
+                return QPointF(x, y), QPointF(x1, y1)
+    
+    def paint_traingle(self, left_top, right_bottom):
+        p = self._painter
+        brush = QBrush(Qt.BDiagPattern)
+        p.setBrush(brush)
+        p.setPen(self.drawing_rect_color)
+        
+        p1, p2 = self.calc_extra_points(-1*self.calc_shib(left_top, right_bottom), left_top)
+        points = QPolygonF([
+            p1,
+            left_top,
+            p2,
+            right_bottom,
+        ])
+        p.drawPolygon(points);
+
     def paintEvent(self, event):
         if not self.pixmap:
             return super(Canvas, self).paintEvent(event)
@@ -494,12 +544,8 @@ class Canvas(QWidget):
         if self.current is not None and len(self.line) == 2:
             left_top = self.line[0]
             right_bottom = self.line[1]
-            rect_width = right_bottom.x() - left_top.x()
-            rect_height = right_bottom.y() - left_top.y()
-            p.setPen(self.drawing_rect_color)
-            brush = QBrush(Qt.BDiagPattern)
-            p.setBrush(brush)
-            p.drawRect(left_top.x(), left_top.y(), rect_width, rect_height)
+            self.paint_traingle(left_top, right_bottom)
+
 
         if self.drawing() and not self.prev_point.isNull() and not self.out_of_pixmap(self.prev_point):
             p.setPen(QColor(0, 0, 0))
