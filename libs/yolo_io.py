@@ -10,7 +10,7 @@ from libs.constants import DEFAULT_ENCODING
 from libs.utils import calc_distance, calc_extra_points, calc_shib
 from PyQt5.QtCore import QPointF
 
-TXT_EXT = '.txt'
+CSV_EXT = '.csv'
 ENCODE_METHOD = DEFAULT_ENCODING
 
 
@@ -46,7 +46,7 @@ class YOLOWriter:
 
         if target_file is None:
             out_file = open(
-                self.filename + TXT_EXT, 'w', encoding=ENCODE_METHOD)
+                self.filename + CSV_EXT, 'w', encoding=ENCODE_METHOD)
             classes_file = os.path.join(os.path.dirname(
                 os.path.abspath(self.filename)), "classes.txt")
             out_class_file = open(classes_file, 'w')

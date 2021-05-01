@@ -43,7 +43,7 @@ from libs.toolBar import ToolBar
 from libs.pascal_voc_io import PascalVocReader
 from libs.pascal_voc_io import XML_EXT
 from libs.yolo_io import YoloReader
-from libs.yolo_io import TXT_EXT
+from libs.yolo_io import CSV_EXT
 from libs.create_ml_io import CreateMLReader
 from libs.create_ml_io import JSON_EXT
 from libs.ustr import ustr
@@ -545,7 +545,7 @@ class MainWindow(QMainWindow, WindowMixin):
             self.actions.save_format.setText(FORMAT_YOLO)
             self.actions.save_format.setIcon(new_icon("format_yolo"))
             self.label_file_format = LabelFileFormat.YOLO
-            LabelFile.suffix = TXT_EXT
+            LabelFile.suffix = CSV_EXT
 
         elif save_format == FORMAT_CREATEML:
             self.actions.save_format.setText(FORMAT_CREATEML)
@@ -554,15 +554,15 @@ class MainWindow(QMainWindow, WindowMixin):
             LabelFile.suffix = JSON_EXT
 
     def change_format(self):
-        if self.label_file_format == LabelFileFormat.PASCAL_VOC:
-            self.set_format(FORMAT_YOLO)
-        elif self.label_file_format == LabelFileFormat.YOLO:
-            self.set_format(FORMAT_CREATEML)
-        elif self.label_file_format == LabelFileFormat.CREATE_ML:
-            self.set_format(FORMAT_PASCALVOC)
-        else:
-            raise ValueError('Unknown label file format.')
-        self.set_dirty()
+        # if self.label_file_format == LabelFileFormat.PASCAL_VOC:
+        #     self.set_format(FORMAT_YOLO)
+        # elif self.label_file_format == LabelFileFormat.YOLO:
+        self.set_format(FORMAT_YOLO)
+        # elif self.label_file_format == LabelFileFormat.CREATE_ML:
+        #     self.set_format(FORMAT_PASCALVOC)
+        # else:
+        #     raise ValueError('Unknown label file format.')
+        # self.set_dirty()
 
     def no_shapes(self):
         return not self.items_to_shapes
@@ -872,8 +872,8 @@ class MainWindow(QMainWindow, WindowMixin):
                 self.label_file.save_pascal_voc_format(annotation_file_path, shapes, self.file_path, self.image_data,
                                                        self.line_color.getRgb(), self.fill_color.getRgb())
             elif self.label_file_format == LabelFileFormat.YOLO:
-                if annotation_file_path[-4:].lower() != ".txt":
-                    annotation_file_path += TXT_EXT
+                if annotation_file_path[-4:].lower() != ".csv":
+                    annotation_file_path += CSV_EXT
                 self.label_file.save_yolo_format(annotation_file_path, shapes, self.file_path, self.image_data, self.label_hist,
                                                  self.line_color.getRgb(), self.fill_color.getRgb())
             elif self.label_file_format == LabelFileFormat.CREATE_ML:
@@ -1142,7 +1142,7 @@ class MainWindow(QMainWindow, WindowMixin):
         if self.default_save_dir is not None:
             basename = os.path.basename(os.path.splitext(file_path)[0])
             xml_path = os.path.join(self.default_save_dir, basename + XML_EXT)
-            txt_path = os.path.join(self.default_save_dir, basename + TXT_EXT)
+            txt_path = os.path.join(self.default_save_dir, basename + CSV_EXT)
             json_path = os.path.join(
                 self.default_save_dir, basename + JSON_EXT)
 
@@ -1158,7 +1158,7 @@ class MainWindow(QMainWindow, WindowMixin):
 
         else:
             xml_path = os.path.splitext(file_path)[0] + XML_EXT
-            txt_path = os.path.splitext(file_path)[0] + TXT_EXT
+            txt_path = os.path.splitext(file_path)[0] + CSV_EXT
             if os.path.isfile(xml_path):
                 self.load_pascal_xml_by_filename(xml_path)
             elif os.path.isfile(txt_path):
