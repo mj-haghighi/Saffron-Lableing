@@ -49,7 +49,7 @@ from libs.create_ml_io import JSON_EXT
 from libs.ustr import ustr
 from libs.hashableQListWidgetItem import HashableQListWidgetItem
 
-__appname__ = 'labelImg'
+__appname__ = 'saffron annotation'
 
 
 class WindowMixin(object):
@@ -1629,29 +1629,24 @@ def get_main_app(argv=[]):
     Standard boilerplate Qt application code.
     Do everything but app.exec_() -- so that we can test the application in one thread
     """
-    app = QApplication(argv)
-    app.setApplicationName(__appname__)
-    app.setWindowIcon(new_icon("app"))
+    from fbs_runtime.application_context.PyQt5 import ApplicationContext
+    app = ApplicationContext()
+    app.app.setApplicationName(__appname__)
+    # app.app.setWindowIcon(newIcon("app"))
     # Tzutalin 201705+: Accept extra agruments to change predefined class file
     argparser = argparse.ArgumentParser()
     argparser.add_argument("image_dir", nargs="?")
-    argparser.add_argument("class_file",
+    argparser.add_argument("predefined_classes_file",
                            default=os.path.join(os.path.dirname(
                                __file__), "data", "predefined_classes.txt"),
                            nargs="?")
-    argparser.add_argument("save_dir", nargs="?")
+    # argparser.add_argument("save_dir", nargs="?")
     args = argparser.parse_args(argv[1:])
-
-    args.image_dir = args.image_dir and os.path.normpath(args.image_dir)
-    args.class_file = args.class_file and os.path.normpath(args.class_file)
-    args.save_dir = args.save_dir and os.path.normpath(args.save_dir)
-
-    # Usage : labelImg.py image classFile saveDir
+    # Usage : labelImg.py image predefClassFile saveDir
     win = MainWindow(args.image_dir,
-                     args.class_file,
-                     args.save_dir)
+                     args.predefined_classes_file)
     win.show()
-    return app, win
+    return app.app, win
 
 
 def main():
