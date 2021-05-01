@@ -12,7 +12,9 @@ except ImportError:
 from libs.utils import distance, calc_extra_points, calc_distance, calc_shib
 import sys
 
-DEFAULT_LINE_COLOR = QColor(0, 255, 0, 128)
+DEFAULT_LINE_COLOR = QColor(0, 255, 0)
+DEFAULT_LIGHT_LINE_COLOR = QColor(0, 255, 0, 20)
+DEFAULT_CENTER_LINE_COLOR = QColor(0, 255, 0)
 DEFAULT_FILL_COLOR = QColor(255, 0, 0, 128)
 DEFAULT_SELECT_LINE_COLOR = QColor(255, 255, 255)
 DEFAULT_SELECT_FILL_COLOR = QColor(0, 128, 255, 155)
@@ -86,7 +88,7 @@ class Shape(object):
 
     def paint(self, painter):
         if self.points:
-            color = self.select_line_color if self.selected else self.line_color
+            color = self.select_line_color if self.selected else DEFAULT_LIGHT_LINE_COLOR
             pen = QPen(color)
             # Try using integer sizes for smoother drawing(?)
             pen.setWidth(max(1, int(round(2.0 / self.scale))))
@@ -106,10 +108,24 @@ class Shape(object):
                 self.draw_vertex(vertex_path, i)
             if self.is_closed():
                 line_path.lineTo(self.points[0])
-
             painter.drawPath(line_path)
             painter.drawPath(vertex_path)
             painter.fillPath(vertex_path, self.vertex_fill_color)
+
+            if len(self.points) == 4:
+                color2 = DEFAULT_CENTER_LINE_COLOR
+                pen2 = QPen(color2)
+                # Try using integer sizes for smoother drawing(?)
+                pen2.setWidth(max(2, int(round(2.0 / self.scale))))
+                painter.setPen(pen2)
+
+                line_path2 = QPainterPath()
+
+                line_path2.moveTo(self.points[1])
+                line_path2.lineTo(self.points[3])
+                line_path2.lineTo(self.points[0])
+                line_path2.lineTo(self.points[2])
+                painter.drawPath(line_path2)
 
             # Draw text at the top-left
             if self.paint_label:
@@ -148,7 +164,8 @@ class Shape(object):
         if shape == self.P_SQUARE:
             path.addRect(point.x() - d / 2, point.y() - d / 2, d, d)
         elif shape == self.P_ROUND:
-            path.addEllipse(point, d / 2.0, d / 2.0)
+            if i not in [1, 3]:
+                path.addEllipse(point, d / 2.0, d / 2.0)
         else:
             assert False, "unsupported vertex shape"
 
@@ -176,9 +193,10 @@ class Shape(object):
     def recalculate_extra_points(self):
         init = self.points[0]
         target = self.points[2]
-        p1, p2 = calc_extra_points(-1/(calc_shib(init, target)), init, max_d=calc_distance(init, target) / 2)
+        p1, p2 = calc_extra_points(-1/(calc_shib(init, target)),
+                                   init, max_d=calc_distance(init, target) / 2)
         self.points = [init, p1, target, p2]
-    
+
     def move_vertex_by(self, i, offset):
         self.points[i] = self.points[i] + offset
         self.recalculate_extra_points()
