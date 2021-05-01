@@ -505,14 +505,14 @@ class Canvas(QWidget):
         p.setBrush(brush)
         p.setPen(self.drawing_rect_color)
         
-        p1, p2 = self.calc_extra_points(-1/(self.calc_shib(left_top, right_bottom)), left_top)
+        p1, p2 = self.calc_extra_points(-1/(self.calc_shib(left_top, right_bottom)), left_top, max_d=self.calc_distance(left_top, right_bottom) / 2)
         points = QPolygonF([
             p1,
             left_top,
             p2,
             right_bottom,
         ])
-        p.drawPolygon(points);
+        p.drawPolygon(points)
 
     def paintEvent(self, event):
         if not self.pixmap:
