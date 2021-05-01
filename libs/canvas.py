@@ -10,7 +10,7 @@ except ImportError:
 # from PyQt4.QtOpenGL import *
 import math
 from libs.shape import Shape
-from libs.utils import distance
+from libs.utils import distance, calc_shib, calc_distance, calc_extra_points
 
 CURSOR_DEFAULT = Qt.ArrowCursor
 CURSOR_POINT = Qt.PointingHandCursor
@@ -297,7 +297,7 @@ class Canvas(QWidget):
             print('draw finish')
             init_pos = self.current[0]
             target_pos = self.line[1]
-            p1, p2 = self.calc_extra_points(-1/(self.calc_shib(init_pos, target_pos)), init_pos, max_d=self.calc_distance(init_pos, target_pos) / 2)
+            p1, p2 = calc_extra_points(-1/(calc_shib(init_pos, target_pos)), init_pos, max_d=calc_distance(init_pos, target_pos) / 2)
             self.current.add_point(p1)
             self.current.add_point(target_pos)
             self.current.add_point(p2)
@@ -472,37 +472,14 @@ class Canvas(QWidget):
         p.setBrush(brush)
         p.drawRect(left_top.x(), left_top.y(), rect_width, rect_height)
     
-    def calc_shib(self, p1: QPointF, p2: QPointF) -> float:
-        sorat =  (p1.y() - p2.y() + 1) if p1.y() - p2.y() > 0 else p1.y() - p2.y() - 1 
-        makhraj = ((p1.x() - p2.x()) + 1) if p1.x() - p2.x() > 0 else ((p1.x() - p2.x()) - 1) 
-        m =  sorat / makhraj 
-        return m
 
-    def calc_distance(self, p1: QPointF, p2: QPointF):
-        return math.sqrt(((p1.x() - p2.x()) ** 2) + ((p1.y() - p2.y()) ** 2))
-    
-    def calc_extra_points(self, m, p: QPointF, max_d = 40):
-        factor = max_d / 2
-        while True:
-            x = p.x() + factor
-            y = (m * x) + (p.y() - m*p.x())
-            
-            if self.calc_distance(p, QPointF(x,y)) > max_d:
-                factor = factor / 2
-            elif self.calc_distance(p, QPointF(x,y)) < (max_d / 1.5):
-                factor = factor * 1.5
-            else:
-                x1 = p.x() - factor
-                y1 = (m * x1) + (p.y() - m*p.x())
-                return QPointF(x, y), QPointF(x1, y1)
-    
     def paint_traingle(self, left_top, right_bottom):
         p = self._painter
         brush = QBrush(Qt.BDiagPattern)
         p.setBrush(brush)
         p.setPen(self.drawing_rect_color)
         
-        p1, p2 = self.calc_extra_points(-1/(self.calc_shib(left_top, right_bottom)), left_top, max_d=self.calc_distance(left_top, right_bottom) / 2)
+        p1, p2 = calc_extra_points(-1/(calc_shib(left_top, right_bottom)), left_top, max_d=calc_distance(left_top, right_bottom) / 2)
         points = QPolygonF([
             p1,
             left_top,

@@ -9,7 +9,7 @@ except ImportError:
     from PyQt4.QtGui import *
     from PyQt4.QtCore import *
 
-from libs.utils import distance
+from libs.utils import distance, calc_extra_points, calc_distance, calc_shib
 import sys
 
 DEFAULT_LINE_COLOR = QColor(0, 255, 0, 128)
@@ -154,7 +154,7 @@ class Shape(object):
 
     def nearest_vertex(self, point, epsilon):
         for i, p in enumerate(self.points):
-            if distance(p - point) <= epsilon:
+            if distance(p - point) <= epsilon and i not in [1, 3]:
                 return i
         return None
 
@@ -173,8 +173,15 @@ class Shape(object):
     def move_by(self, offset):
         self.points = [p + offset for p in self.points]
 
+    def recalculate_extra_points(self):
+        init = self.points[0]
+        target = self.points[2]
+        p1, p2 = calc_extra_points(-1/(calc_shib(init, target)), init, max_d=calc_distance(init, target) / 2)
+        self.points = [init, p1, target, p2]
+    
     def move_vertex_by(self, i, offset):
         self.points[i] = self.points[i] + offset
+        self.recalculate_extra_points()
 
     def highlight_vertex(self, i, action):
         self._highlight_index = i

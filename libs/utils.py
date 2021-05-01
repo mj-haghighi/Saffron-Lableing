@@ -101,3 +101,28 @@ def natural_sort(list, key=lambda s:s):
         return lambda s: [convert(c) for c in re.split('([0-9]+)', key(s))]
     sort_key = get_alphanum_key_func(key)
     list.sort(key=sort_key)
+
+
+def calc_shib(p1: QPointF, p2: QPointF) -> float:
+    sorat =  (p1.y() - p2.y() + 1) if p1.y() - p2.y() > 0 else p1.y() - p2.y() - 1 
+    makhraj = ((p1.x() - p2.x()) + 1) if p1.x() - p2.x() > 0 else ((p1.x() - p2.x()) - 1) 
+    m =  sorat / makhraj 
+    return m
+
+def calc_distance(p1: QPointF, p2: QPointF):
+    return sqrt(((p1.x() - p2.x()) ** 2) + ((p1.y() - p2.y()) ** 2))
+
+def calc_extra_points(m, p: QPointF, max_d = 40):
+    factor = max_d / 2
+    while True:
+        x = p.x() + factor
+        y = (m * x) + (p.y() - m*p.x())
+        
+        if calc_distance(p, QPointF(x,y)) > max_d:
+            factor = factor / 2
+        elif calc_distance(p, QPointF(x,y)) < (max_d / 1.5):
+            factor = factor * 1.5
+        else:
+            x1 = p.x() - factor
+            y1 = (m * x1) + (p.y() - m*p.x())
+            return QPointF(x, y), QPointF(x1, y1)
