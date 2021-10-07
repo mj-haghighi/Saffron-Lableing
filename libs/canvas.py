@@ -367,7 +367,7 @@ class Canvas(QWidget):
         #     y = min(y, self.pixmap.height())
         #     return x, y, True
 
-        return x, y, False
+        return x, y, True
 
     def bounded_move_vertex(self, pos):
         index, shape = self.h_vertex, self.h_shape
@@ -557,7 +557,7 @@ class Canvas(QWidget):
     def out_of_pixmap(self, p):
         # w, h = self.pixmap.width(), self.pixmap.height()
         # return not (0 <= p.x() <= w and 0 <= p.y() <= h)
-        return True
+        return False
 
     def finalise(self):
         assert self.current
