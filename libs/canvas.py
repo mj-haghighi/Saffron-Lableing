@@ -360,23 +360,23 @@ class Canvas(QWidget):
         Moves a point x,y to within the boundaries of the canvas.
         :return: (x,y,snapped) where snapped is True if x or y were changed, False if not.
         """
-        if x < 0 or x > self.pixmap.width() or y < 0 or y > self.pixmap.height():
-            x = max(x, 0)
-            y = max(y, 0)
-            x = min(x, self.pixmap.width())
-            y = min(y, self.pixmap.height())
-            return x, y, True
+        # if x < 0 or x > self.pixmap.width() or y < 0 or y > self.pixmap.height():
+        #     x = max(x, 0)
+        #     y = max(y, 0)
+        #     x = min(x, self.pixmap.width())
+        #     y = min(y, self.pixmap.height())
+        #     return x, y, True
 
-        return x, y, False
+        return x, y, True
 
     def bounded_move_vertex(self, pos):
         index, shape = self.h_vertex, self.h_shape
         point = shape[index]
-        if self.out_of_pixmap(pos):
-            size = self.pixmap.size()
-            clipped_x = min(max(0, pos.x()), size.width())
-            clipped_y = min(max(0, pos.y()), size.height())
-            pos = QPointF(clipped_x, clipped_y)
+        # if self.out_of_pixmap(pos):
+        #     size = self.pixmap.size()
+        #     clipped_x = min(max(0, pos.x()), size.width())
+        #     clipped_y = min(max(0, pos.y()), size.height())
+        #     pos = QPointF(clipped_x, clipped_y)
 
         if self.draw_square:
             opposite_point_index = (index + 2) % 4
@@ -407,15 +407,15 @@ class Canvas(QWidget):
         shape.move_vertex_by(left_index, left_shift)
 
     def bounded_move_shape(self, shape, pos):
-        if self.out_of_pixmap(pos):
-            return False  # No need to move
-        o1 = pos + self.offsets[0]
-        if self.out_of_pixmap(o1):
-            pos -= QPointF(min(0, o1.x()), min(0, o1.y()))
-        o2 = pos + self.offsets[1]
-        if self.out_of_pixmap(o2):
-            pos += QPointF(min(0, self.pixmap.width() - o2.x()),
-                           min(0, self.pixmap.height() - o2.y()))
+        # if self.out_of_pixmap(pos):
+        #     return False  # No need to move
+        # o1 = pos + self.offsets[0]
+        # if self.out_of_pixmap(o1):
+        #     pos -= QPointF(min(0, o1.x()), min(0, o1.y()))
+        # o2 = pos + self.offsets[1]
+        # if self.out_of_pixmap(o2):
+        #     pos += QPointF(min(0, self.pixmap.width() - o2.x()),
+        #                    min(0, self.pixmap.height() - o2.y()))
         # The next line tracks the new position of the cursor
         # relative to the shape, but also results in making it
         # a bit "shaky" when nearing the border and allows it to
@@ -554,8 +554,9 @@ class Canvas(QWidget):
         return QPointF(x, y)
 
     def out_of_pixmap(self, p):
-        w, h = self.pixmap.width(), self.pixmap.height()
-        return not (0 <= p.x() <= w and 0 <= p.y() <= h)
+        # w, h = self.pixmap.width(), self.pixmap.height()
+        # return not (0 <= p.x() <= w and 0 <= p.y() <= h)
+        return False
 
     def finalise(self):
         assert self.current
